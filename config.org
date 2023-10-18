@@ -1,0 +1,477 @@
+#+TITLE:Cofiguring on
+#+AUTHOR:fmon
+#+STARTUP:overview
+
+* Built-in
+** hols
+#+begin_src elisp
+  (add-to-list 'exec-path "~/.ghcup/bin/")
+#+end_src
+** Emacs
+
+#+begin_src elisp
+(use-package emacs
+  :straight nil
+  :init
+  (setq completion-cycle-threshold 3)
+  (setq tab-always-indent 'complete)
+)
+
+(add-hook 'kill-emacs-hook 'org-save-all-org-buffers)
+#+end_src
+
+#+RESULTS:
+| bookmark-exit-hook-internal | org-fc-review-history-save | org-id-locations-save | org-clock-save | flycheck-global-teardown | savehist-autosave | transient-maybe-save-history | org-save-all-org-buffers | org-babel-remove-temporary-directory |
+
+** Custom file
+
+Put  customisation settings in a disposable "custom.el"
+
+#+begin_src elisp
+(use-package cus-edit
+  :straight nil
+  :config
+  (setq custom-file  "~/.emacs.d/custom.el"))
+#+end_src
+
+** Backups
+
+Make backups, number backups and keep the first and last 3; ask to delete
+#+begin_src elisp
+(use-package files
+  :straight nil
+  :config
+  (setq make-backup-files t)
+  (setq version-control t)
+  (setq kept-old-versions 3
+	kept-new-versions 3)
+  (setq delete-old-versions nil)
+)
+#+end_src
+
+#+RESULTS:
+: t
+
+** Menus
+
+#+begin_src elisp
+(use-package scroll-bar
+  :straight nil
+  :init
+  (scroll-bar-mode -1))
+
+(use-package tool-bar
+  :straight nil
+  :init
+  (tool-bar-mode 1))
+
+(use-package menu-bar
+  :straight nil
+  :init
+  (menu-bar-mode t))
+
+(use-package tab-bar
+  :straight nil
+  :init
+  (setq tab-bar-close-button-show 'selected
+	tab-bar-tab-name-truncated-max 20
+	tab-bar-show 1
+	tab-bar-tab-hints t
+	tab-bar-select-tab-modifiers '(meta)
+	tab-bar-tab-name-function 'tab-bar-tab-name-current)
+  (tab-bar-mode t))
+#+end_src
+
+#+RESULTS:
+
+** Programming
+*** Prog mode
+
+#+begin_src elisp
+(use-package prog-mode
+  :straight nil
+  :hook
+  (prog-mode . display-line-numbers-mode)
+  (prog-mode . (lambda ()(set-input-method 'spanish-prefix)))
+  )
+#+end_src
+
+*** Text mode
+
+#+begin_src elisp
+(use-package text-mode
+  :straight nil
+  :hook
+  (text-mode . display-line-numbers-mode)
+  (text-mode . variable-pitch-mode)
+  (text-mode . (lambda ()(set-input-method 'spanish-prefix)))
+  )
+#+end_src
+
+*** Line numbers
+
+#+begin_src elisp
+(use-package display-line-numbers
+  :straight nil
+  :init
+  (setq display-line-numbers-type 'relative))
+#+end_src
+
+*** Paren
+
+#+begin_src elisp
+(use-package paren
+  :straight nil
+  :config
+  (setq show-paren-style 'mixed)
+  (setq show-paren-when-point-in-periphery nil)
+  (setq show-paren-when-point-inside-paren t)
+  :init
+  (show-paren-mode t))
+#+end_src
+
+*** Abbrev
+
+#+begin_src elisp
+(use-package abbrev
+  :straight nil
+  :config
+  (setq auto-save-abbrevs nil)
+  (set-default 'abbrev-mode t))
+#+end_src
+
+** Compilation
+
+#+begin_src elisp
+(use-package compile
+  :straight nil)
+#+end_src
+
+#+RESULTS:
+| (lambda nil (setq-local compile-command (concat gcc -Wall -Wextra -g  (shell-quote-argument (file-name-sans-extension buffer-file-name))  -o))) | (lambda nil (setq-local compile-command (concat gcc -Wall -Wextra -g  (shell-quote-argument (file-name-sans-extension buffer-file-name))  -o ))) | (lambda nil (setq-local compile-command (concat gcc -Wall -Wextra -g  (buffer-file-name (window-buffer (minibuffer-selected-window)))  -o ))) | (lambda nil (setq-local compile-command (concat gcc -Wall -Wextra -g  (if buffer-file-name (shell-quote-argument (file-name-sans-extension buffer-file-name)))))) | lsp-mode | corfu-mode | (lambda nil (add-to-list 'completion-at-point-functions #'clang-capf)) |
+
+** File management
+
+#+begin_src elisp
+(use-package dired
+  :straight nil
+  :config
+  (setq delete-by-moving-to-trash t)
+  (setq dired-kill-when-opening-new-dired-buffer t)
+  :hook
+  (dired-mode . dired-hide-details-mode))
+
+(use-package dired-aux
+  :straight nil
+  :config
+  (setq dired-create-destination-dirs 'ask
+		dired-vc-rename-file t))
+
+(use-package dired-x
+  :straight nil
+  :config
+  (setq dired-clean-up-buffers-too t
+		dired-clean-confirm-killing-deleted-buffers t
+		dired-x-hands-off-my-keys t
+		dired-bind-man nil
+		dired-bind-info nil))
+
+(use-package async
+  :init
+  (dired-async-mode 1))
+#+end_src
+
+#+RESULTS:
+
+** Dictionary
+
+#+begin_src elisp
+(use-package dictionary
+  :straight nil
+  :config
+  (setq dictionary-server "dict.org")
+  )
+#+end_src
+
+** Eshell
+
+#+begin_src elisp
+(use-package eshell
+  :straight nil
+  :config
+  (setq eshell-prompt-function
+	(lambda ()
+          (concat
+           (propertize "┌─[" 'face `default)
+           (propertize (user-login-name) 'face `font-lock-keyword-face)
+           (propertize "@" 'face `default)
+           (propertize (system-name) 'face `font-lock-builtin-face)
+           (propertize "]──[" 'face `default)
+           (propertize (concat (eshell/pwd)) 'face `font-lock-string-face)
+           (propertize "]🐧\n" 'face `default)
+           (propertize "└─>" 'face `default)
+           (propertize (if (= (user-uid) 0) " # " " $ ") 'face `default)
+           )))
+  :hook
+  (eshell-mode . (lambda () (setenv "TERM" "xterm-256color")))
+  (eshell-mode . (lambda ()
+		   (eshell/alias "ff" "find-file $1")
+		   (eshell/alias "ee" "exit")
+		   (eshell/alias "d" "dired $1")
+		   )))
+#+end_src
+
+#+RESULTS:
+| lambda | nil | (eshell/alias ff find-file $1) | (eshell/alias ee exit) | (eshell/alias d dired $1) | (eshell/alias ytdlp22 yt-dlp -f 22) |
+| lambda | nil | (eshell/alias ff find-file $1) | (eshell/alias ee exit) | (eshell/alias d dired $1) |                                     |
+| lambda | nil | (setenv TERM xterm-256color)   |                        |                           |                                     |
+
+** Project.el
+
+#+begin_src elisp
+(use-package project
+  :straight nil)
+#+end_src
+
+#+RESULTS:
+: ce-project-el-hydra/body
+
+* Magit
+
+#+begin_src elisp
+(use-package magit)
+#+end_src
+
+* Latex
+
+#+begin_src elisp
+(use-package latex
+  :straight (auctex :type git :host github :repo "emacs-straight/auctex" :files ("*" (:exclude ".git")))
+  :config
+  (setq TeX-auto-save t)
+  (setq TeX-parse-self t))
+#+end_src
+
+* Completion
+** Pyright
+
+#+begin_src elisp
+(use-package lsp-pyright
+  :hook (python-mode . (lambda () (require 'lsp-pyright)(lsp))))
+#+end_src
+
+#+RESULTS:
+| (lambda nil (require 'lsp-pyright) (lsp)) | doom-modeline-env-setup-python |
+** Vertico and complementary package
+
+#+begin_src elisp
+(use-package vertico
+  :init
+  (vertico-mode))
+
+(use-package savehist
+  :straight nil
+  :init
+  (savehist-mode))
+
+(use-package orderless
+  :custom
+  (completion-styles '(orderless))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles . (partial-completion))))))
+
+(use-package marginalia
+  :after vertico
+  :config
+  (setq marginalia-max-relative-age 0)
+  :init
+  (marginalia-mode))
+#+end_src
+** Corfu
+
+#+begin_src elisp
+(use-package corfu
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for corfu-next/previous
+  (corfu-auto t)                 ;; Enable auto completion
+  :bind
+  (:map corfu-map
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
+  :hook
+  (LaTeX-mode . corfu-mode)
+  (c-mode-common . corfu-mode)
+  (python-mode . corfu-mode)
+)
+#+end_src
+
+#+RESULTS:
+
+** Lsp
+
+#+begin_src elisp
+(use-package lsp-mode
+  :custom
+  (lsp-completion-provider :none) 	; corfu
+  (lsp-idle-delay 0.1)
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  (defun my/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless))) ;; Configure orderless
+  :hook
+  (lsp-completion-mode . my/lsp-mode-setup-completion)
+  (lsp-mode . lsp-enable-which-key-integration)
+  (LaTeX-mode . lsp)
+  (c-mode-common . lsp)
+  (sh-mode . lsp)
+  :commands lsp)
+#+end_src
+
+#+RESULTS:
+| lsp |
+
+** lsp ui
+
+#+begin_src elisp
+(use-package lsp-ui)
+#+end_src
+
+#+RESULTS:
+
+** flycheck
+#+begin_src elisp
+(use-package flycheck)
+#+end_src
+* Modeline
+
+#+begin_src elisp
+(use-package doom-modeline
+  :config
+  (add-to-list 'global-mode-string '("" wc-buffer-stats))
+  (setq doom-modeline-buffer-encoding t
+		doom-modeline-modal-icon t
+		doom-modelinte-icon t
+		doom-modeline-buffer-file-name-style 'auto)
+  :init
+  (add-hook 'after-init-hook 'doom-modeline-mode))
+#+end_src
+
+* Which key
+
+#+begin_src elisp
+(use-package which-key
+  :init
+  (which-key-mode))
+
+(use-package page-break-lines
+  :init
+  (global-page-break-lines-mode))
+#+end_src
+
+* Ef-themes
+
+#+begin_src elisp
+(use-package ef-themes
+:init
+(ef-themes-select 'ef-summer))
+#+end_src
+
+* All the icons
+
+#+begin_src elisp
+(use-package all-the-icons)
+#+end_src
+
+* Dired icons
+
+#+begin_src elisp
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode))
+#+end_src
+
+#+RESULTS:
+| all-the-icons-dired-mode | doom-modeline-set-project-modeline | pdf-occur-dired-minor-mode | org-download-enable | dired-extra-startup | dired-hide-details-mode |
+
+* evil mode
+
+#+begin_src elisp
+(use-package evil
+:init
+(evil-mode 1))
+(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+#+end_src
+
+#+RESULTS:
+: 
+
+* Rust
+
+#+begin_src elisp
+(use-package rust-mode
+  :bind (:map rust-mode-map
+	      ("C-c C-c" . rust-run)))
+#+end_src
+
+* Haskell
+
+#+begin_src elisp
+(use-package haskell-mode
+  :hook (haskell-mode . haskell-doc-mode)
+)
+#+end_src
+
+#+RESULTS:
+
+* R
+
+#+begin_src elisp
+(use-package ess)
+#+end_src
+
+#+RESULTS:
+
+* lua
+#+begin_src elisp
+(use-package lua-mode)
+#+end_src
+
+#+RESULTS:
+
+* Hydra
+
+#+begin_src elisp
+(use-package hydra)
+#+end_src
+
+* ripgrep
+
+#+begin_src elisp
+(use-package rg
+  :init
+  (rg-enable-menu))
+#+end_src
+
+#+RESULTS:
+
+* fzf
+
+#+begin_src elisp
+(use-package fzf
+  :config
+  (setq fzf/args "-x --color bw --print-query --margin=1,0 --no-hscroll"
+        fzf/executable "fzf"
+        fzf/git-grep-args "-i --line-number %s"
+        ;; command used for `fzf-grep-*` functions
+        ;; example usage for ripgrep:
+        fzf/grep-command "rg --no-heading -nH"
+        ;; fzf/grep-command "grep -nrH"
+        ;; If nil, the fzf buffer will appear at the top of the window
+        fzf/position-bottom t
+        fzf/window-height 15))
+#+end_src
+
+#+RESULTS:
+: ce-fzf-notes
